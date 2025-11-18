@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Aqlan Admin Store Dashboard">
+
+  <!-- ✅ إعدادات متوافقة مع كل المتصفحات -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Aqlan Admin Store">
+
+  <!-- ✅ أيقونات -->
+  <link rel="apple-touch-icon" href="icons/Icon-1921.png">
+  <link rel="icon" type="image/png" href="favicon.png" />
+
+  <!-- ✅ تفعيل manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- ✅ منع تحميل خطوط Google -->
+  <style>
+    @font-face {
+      font-family: 'Roboto';
+      src: url('assets/fonts/Roboto-Regular.ttf') format('truetype');
+    }
+
+    @font-face {
+      font-family: 'NotoSansArabic';
+      src: url('assets/fonts/NotoSansArabic-Regular.ttf') format('truetype');
+    }
+
+    @font-face {
+      font-family: 'Noto Sans Symbols';
+      src: url('assets/fonts/NotoSansSymbols-Regular.ttf') format('truetype');
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'NotoSansArabic', 'Roboto', sans-serif;
+      background-color: #ffffff;
+    }
+  </style>
+
+  <!-- ✅ إصلاح مشكلة Safari القديمة -->
+  <script>
+    (function() {
+      const ua = navigator.userAgent.toLowerCase();
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      if (isSafari || ua.includes('iphone') || ua.includes('ipad')) {
+        window.flutterWebRenderer = 'html';
+      }
+    })();
+  </script>
+
+  <!-- ✅ إعداد المسار الأساسي -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <!-- ✅ اجعل Flutter يستخدم renderer المناسب -->
+  <meta name="flutter-web-renderer" content="auto">
+
+  <title>Aqlan Admin Store</title>
+</head>
+
+<body>
+<!-- ✅ تحميل تطبيق Flutter -->
+<script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

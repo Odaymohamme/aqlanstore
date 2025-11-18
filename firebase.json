@@ -1,0 +1,38 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "aqlan-spices",
+          "appId": "1:348781799507:android:1ca36340e84463b86efea6",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "aqlan-spices",
+          "configurations": {
+            "android": "1:348781799507:android:1ca36340e84463b86efea6",
+            "ios": "1:348781799507:ios:90b3a910dc9f849f6efea6",
+            "web": "1:348781799507:web:8c3cb2b337510de46efea6",
+            "windows": "1:348781799507:web:70f2100ee721a5876efea6"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
