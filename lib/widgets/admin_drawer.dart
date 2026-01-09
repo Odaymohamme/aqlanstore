@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/NotificationsScreen.dart';
 import '../screens/categories_screen.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/offers_edit_screen.dart';
@@ -36,6 +37,7 @@ class AdminDrawer extends StatelessWidget {
           _tile(context, Icons.people, 'العملاء', const CustomersScreen()),
           _protectedTile(context, Icons.people_outline_rounded, 'الموظفين', const EmployeesScreen()),
           _tile(context, Icons.settings, 'الصلاحيات', const RolesScreen()),
+          _tile(context, Icons.notifications, 'الاشعارات', const NotificationsScreen()),
         ],
       ),
     );

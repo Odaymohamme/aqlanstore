@@ -27,6 +27,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_native_splash: ^2.3.10
   url_launcher: ^6.1.10
+  firebase_messaging:
 
 dev_dependencies:
   flutter_test:

@@ -47,7 +47,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         final custSnap = await FirebaseFirestore.instance.collection('customers').doc(customerId).get();
         if (custSnap.exists) {
           _customerData = custSnap.data();
-          _customerPhone = _customerData?['phone']?.toString();
+          _customerPhone = _customerData?['phone ']?.toString();
         } else {
           // قد يكون customerId not doc id but a numeric/id stored in field; نبحث أيضاً عن document الذي يمتلك customer_id == customerId
           final q = await FirebaseFirestore.instance.collection('customers').where('customer_id', isEqualTo: customerId).limit(1).get();

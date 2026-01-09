@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -24,6 +25,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final TextEditingController descCtrl = TextEditingController();
   final TextEditingController unitCtrl = TextEditingController(text: 'كيلو');
   final TextEditingController itemIdCtrl = TextEditingController();
+  bool _removeBackground = false; // 🟢 REMOVE BG
+
 
   String? _categoryId;
   bool _loading = false;
@@ -48,6 +51,33 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       itemIdCtrl.text = d['item_id']?.toString() ?? '';
     }
   }
+
+  // 🟢 REMOVE BG
+  Future<Uint8List> _removeImageBackground(Uint8List imageBytes) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('https://api.remove.bg/v1.0/removebg'),
+    );
+
+    request.headers['X-Api-Key'] = 'j7YETYfuibydTk9CirYXPNxL';
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'image_file',
+        imageBytes,
+        filename: 'image.jpg',
+      ),
+    );
+    request.fields['size'] = 'auto';
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      return await response.stream.toBytes();
+    } else {
+      throw Exception('فشل إزالة الخلفية');
+    }
+  }
+
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -155,10 +185,36 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
     try {
       // ✅ رفع الصورة فقط إن وجدت
+      // 🟢 REMOVE BG
       if ((_pickedImage != null && !kIsWeb) ||
           (kIsWeb && _webImageBytes != null)) {
-        _imageUrl = await _uploadImageToSupabase();
+
+        Uint8List imageBytes;
+
+        if (kIsWeb && _webImageBytes != null) {
+          imageBytes = _webImageBytes!;
+        } else {
+          imageBytes = await _pickedImage!.readAsBytes();
+        }
+
+        // 🟢 REMOVE BG (اختياري)
+        if (_removeBackground) {
+          imageBytes = await _removeImageBackground(imageBytes);
+        }
+
+        // 🟢 REMOVE BG – رفع النسخة النهائية
+        final fileName = 'products/${DateTime.now().millisecondsSinceEpoch}.png';
+        await supabase.storage.from('products').uploadBinary(
+          fileName,
+          imageBytes,
+          fileOptions: const FileOptions(contentType: 'image/png'),
+        );
+
+        _imageUrl = await supabase.storage
+            .from('products')
+            .createSignedUrl(fileName, 60 * 60 * 24 * 365);
       }
+
 
       final payload = {
         'name': nameCtrl.text.trim(),
@@ -370,25 +426,77 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   GestureDetector(
                     onTap: _pickImage,
                     child: Container(
-                      height: 150,
-                      color: Colors.grey[200],
-                      child: Builder(builder: (context) {
-                        if (kIsWeb && _webImageBytes != null) {
-                          return Image.memory(_webImageBytes!,
-                              fit: BoxFit.cover, width: double.infinity);
-                        }
-                        if (!kIsWeb && _pickedImage != null) {
-                          return Image.file(_pickedImage!,
-                              fit: BoxFit.cover, width: double.infinity);
-                        }
-                        if (_imageUrl != null && _imageUrl!.isNotEmpty) {
-                          return Image.network(_imageUrl!,
-                              fit: BoxFit.cover, width: double.infinity);
-                        }
-                        return const Center(child: Text('اضغط لإضافة صورة'));
-                      }),
+                      height: 180,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade400),
+                      ),
+                      child: Builder(
+                        builder: (context) {
+                          Widget imageWidget;
+
+                          if (kIsWeb && _webImageBytes != null) {
+                            imageWidget = Image.memory(
+                              _webImageBytes!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            );
+                          } else if (!kIsWeb && _pickedImage != null) {
+                            imageWidget = Image.file(
+                              _pickedImage!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            );
+                          } else if (_imageUrl != null && _imageUrl!.isNotEmpty) {
+                            imageWidget = Image.network(
+                              _imageUrl!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            );
+                          } else {
+                            return const Center(child: Text('لا توجد صورة'));
+                          }
+
+                          return GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (_) => Dialog(
+                                  backgroundColor: Colors.black,
+                                  insetPadding: const EdgeInsets.all(10),
+                                  child: InteractiveViewer(child: imageWidget),
+                                ),
+                              );
+                            },
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: imageWidget,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    value: _removeBackground,
+                    onChanged: (v) {
+                      setState(() => _removeBackground = v);
+                    },
+                    title: const Text(
+                      'إزالة خلفية الصورة',
+                      style: TextStyle(fontFamily: 'NotoSansArabic'),
+                    ),
+                    subtitle: const Text(
+                      'سيتم تطبيقها عند الحفظ',
+                      style: TextStyle(fontFamily: 'NotoSansArabic'),
                     ),
                   ),
+
+
+
 
                   const SizedBox(height: 20),
 
@@ -403,6 +511,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     ),
                     onPressed: _generateUnits,
                   ),
+
+
 
                   const SizedBox(height: 12),
 
