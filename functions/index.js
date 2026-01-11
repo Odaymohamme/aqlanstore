@@ -1,40 +1,46 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-
 admin.initializeApp();
 
-exports.notifyAdminOnNewOrder = functions.firestore
-  .document("orders/{orderId}")
+exports.notifyAdminOnNewCustomer = functions.firestore
+  .document('customers/{custId}')
   .onCreate(async (snap, context) => {
+    const data = snap.data();
+    const title = "مستخدم جديد";
+    const body = `انضم: ${data?.name || 'مستخدم جديد'}`;
 
-    const orderId = context.params.orderId;
-    const orderData = snap.data();
+    // جلب جميع توكنات الادمن
+    const tokensSnap = await admin.firestore().collection('admin_tokens').get();
+    const tokens = tokensSnap.docs.map(d => d.id); // أنا خزّنت docId == token في المثال السابق
 
-    // جلب توكنات الأدمن
-    const tokensSnap = await admin.firestore()
-      .collection("admin_fcm_tokens")
-      .get();
+    if (!tokens.length) return null;
 
-    if (tokensSnap.empty) {
-      console.log("لا يوجد توكنات أدمن");
-      return null;
-    }
-
-    const tokens = tokensSnap.docs.map(doc => doc.id);
-
-    const payload = {
-      notification: {
-        title: "📦 طلب جديد",
-        body: `طلب جديد من العميل رقم ${orderData.customer_id}`,
-      },
-      data: {
-        order_id: orderId,
-        click_action: "FLUTTER_NOTIFICATION_CLICK",
-      },
+    const message = {
+      notification: { title, body },
+      tokens: tokens,
+      data: { type: 'new_customer', id: snap.id }
     };
 
-    await admin.messaging().sendToDevice(tokens, payload);
+    return admin.messaging().sendMulticast(message);
+  });
 
-    console.log("تم إرسال إشعار للأدمن");
-    return null;
-});
+exports.notifyAdminOnNewOrder = functions.firestore
+  .document('orders/{orderId}')
+  .onCreate(async (snap, context) => {
+    const data = snap.data();
+    const title = "طلب جديد";
+    const body = `طلب #${snap.id} — المجموع: ${data?.total || '-'}`;
+
+    const tokensSnap = await admin.firestore().collection('admin_tokens').get();
+    const tokens = tokensSnap.docs.map(d => d.id);
+
+    if (!tokens.length) return null;
+
+    const message = {
+      notification: { title, body },
+      tokens: tokens,
+      data: { type: 'new_order', id: snap.id }
+    };
+
+    return admin.messaging().sendMulticast(message);
+  });

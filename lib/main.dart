@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
-import 'screens/order_details_screen.dart';
+import 'services/notification_service.dart';
+import 'services/firestore_notifications_service.dart';
+
 
 /// 🔔 Background handler (Android / iOS فقط)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -19,25 +21,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  /// 1️⃣ Firebase init
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  /// 2️⃣ Background messages (موبايل فقط)
   if (!kIsWeb) {
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler);
   }
-
-  /// 3️⃣ إعداد الإشعارات (موبايل + ويب)
-  await _setupNotifications();
-
-  /// 4️⃣ Supabase
-  await Supabase.initialize(
-    url: 'https://nrjwzdkhwcqokwlmkzem.supabase.co',
-    anonKey:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yand6ZGtod2Nxb2t3bG1remVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTkzMjYsImV4cCI6MjA3NjI5NTMyNn0.1c8usW_rodQEo0s2G8S5Ggc2NN8iOU0GO0Qd6yFAm8g',
-  );
 
   runApp(const AdminApp());
 }
